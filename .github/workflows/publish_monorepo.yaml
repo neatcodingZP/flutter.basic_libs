@@ -111,8 +111,8 @@ jobs:
 
       # IMPORTANT: This action handles the secure pub.dev authentication using OIDC.
       # It creates a temporary token and makes it available to the `dart pub` tool.
-      - name: 🔐 Configure Pub.dev Credentials
-        uses: dart-lang/setup-pub@v1
+      # - name: 🔐 Configure Pub.dev Credentials
+      #   uses: dart-lang/setup-pub@v1
 
       - name: 🚀 Publish to pub.dev
         # The `dart-lang/setup-pub` action has already set up the authentication.
