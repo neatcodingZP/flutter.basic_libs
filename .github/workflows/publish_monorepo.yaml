@@ -126,6 +126,7 @@ jobs:
       #   # `--force` is used to bypass the interactive confirmation prompt in CI.
       #   run: flutter pub publish --force
       #   working-directory: ${{ steps.validate_package.outputs.working_directory }} # Crucial for specific package
+      #
 
       - name: 🎉 Create GitHub Release
         id: create_release
