@@ -4,4 +4,4 @@ Flutter libraries (packages).
 
 | Package | Description | Version |
 | --- | --- | --- |
-| [neat_ui](pkgs/args/) | Basic Flutter UI library with widgets and utilities. | [![pub package](https://img.shields.io/pub/v/args.svg)](https://pub.dev/packages/args) |
+| [neat_ui](packages/neat_ui/) | Basic Flutter UI library with widgets and utilities. | [![pub package](https://img.shields.io/pub/v/neat_ui.svg)](https://pub.dev/packages/neat_ui) |
