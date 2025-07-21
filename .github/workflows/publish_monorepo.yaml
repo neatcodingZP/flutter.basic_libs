@@ -121,11 +121,11 @@ jobs:
         # uses: dart-lang/setup-pub@v1
         uses: flutter-actions/setup-pubdev-credentials@v1
 
-      - name: 🚀 Publish to pub.dev
-        # The `dart-lang/setup-pub` action has already set up the authentication.
-        # `--force` is used to bypass the interactive confirmation prompt in CI.
-        run: flutter pub publish --force
-        working-directory: ${{ steps.validate_package.outputs.working_directory }} # Crucial for specific package
+      # - name: 🚀 Publish to pub.dev
+      #   # The `dart-lang/setup-pub` action has already set up the authentication.
+      #   # `--force` is used to bypass the interactive confirmation prompt in CI.
+      #   run: flutter pub publish --force
+      #   working-directory: ${{ steps.validate_package.outputs.working_directory }} # Crucial for specific package
 
       - name: 🎉 Create GitHub Release
         id: create_release
