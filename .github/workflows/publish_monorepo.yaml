@@ -21,7 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write # Essential: Required for OpenID Connect (OIDC) authentication with pub.dev
-      contents: read  # Required to checkout your code from the repository
+      contents: write 
+      pull-requests: write
 
     steps:
       - name: ⬇️ Checkout code
