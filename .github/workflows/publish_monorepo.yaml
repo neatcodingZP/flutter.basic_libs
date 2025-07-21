@@ -1,0 +1,136 @@
+name: Publish Monorepo Package to pub.dev
+
+on:
+  push:
+    tags:
+      # This tag pattern MUST match what you configured on pub.dev's admin tab.
+      # It also needs to match the structure of your monorepo.
+      #
+      # Examples:
+      # - 'packages/*/v[0-9]+.[0-9]+.[0-9]+*'      # For packages like 'packages/ui_kit/v1.0.0'
+      # - 'apps/*/v[0-9]+.[0-9]+.[0-9]+*'          # For apps like 'apps/my_app/v1.0.0'
+      # - 'modules/**/*.0-9]+.[0-9]+.[0-9]+*'      # For packages nested deeper like 'modules/feature/sub_feature/v1.0.0'
+      # - 'your_top_folder/*/v[0-9]+.[0-9]+.[0-9]+*' # ADJUST THIS TO YOUR ACTUAL MONOREPO STRUCTURE!
+      - 'packages/*/v[0-9]+.[0-9]+.[0-9]+*' # Common pattern: packages/<package_name>/vX.Y.Z
+      
+      # Add more patterns if your packages are in different top-level folders or at different depths
+      # E.g., if you have 'widgets/core_widgets/vX.Y.Z', you'd add '- 'widgets/*/v[0-9]+.[0-9]+.[0-9]+*''
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Essential: Required for OpenID Connect (OIDC) authentication with pub.dev
+      contents: read  # Required to checkout your code from the repository
+
+    steps:
+      - name: ⬇️ Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔍 Parse Package Info from Tag
+        id: parse_tag
+        run: |
+          # The GITHUB_REF_NAME for a tag like 'packages/ui_kit/v1.0.0' is 'packages/ui_kit/v1.0.0'.
+          # We need to extract the package's folder path and the version number.
+          
+          # Example for tag 'packages/ui_kit/v1.0.0':
+          # - PATH_PREFIX will be 'packages'
+          # - PACKAGE_NAME will be 'ui_kit'
+          # - VERSION_STRING will be 'v1.0.0'
+
+          # Split the tag by '/'
+          IFS='/' read -r -a TAG_PARTS <<< "${{ github.ref_name }}"
+
+          # The full path to the package directory depends on your structure.
+          # For 'packages/ui_kit/v1.0.0', the path is 'packages/ui_kit'
+          # This assumes your structure is <TOP_LEVEL_FOLDER>/<PACKAGE_NAME>/vX.Y.Z
+          TOP_LEVEL_FOLDER="${TAG_PARTS[0]}"
+          PACKAGE_NAME="${TAG_PARTS[1]}"
+          VERSION_STRING="${TAG_PARTS[2]}"
+
+          PACKAGE_FULL_PATH="$TOP_LEVEL_FOLDER/$PACKAGE_NAME"
+          PACKAGE_VERSION=$(echo "$VERSION_STRING" | sed 's/^v//') # Remove 'v' prefix
+
+          echo "Detected Top-Level Folder: $TOP_LEVEL_FOLDER"
+          echo "Detected Package Name: $PACKAGE_NAME"
+          echo "Detected Package Full Path: $PACKAGE_FULL_PATH"
+          echo "Detected Package Version: $PACKAGE_VERSION"
+
+          # Output these for subsequent steps
+          echo "package_full_path=$PACKAGE_FULL_PATH" >> $GITHUB_OUTPUT
+          echo "package_version=$PACKAGE_VERSION" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: ⚙️ Setup Flutter SDK
+        # Use this for Flutter packages. For pure Dart packages, use dart-lang/setup-dart@v1
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version: '3.19.0' # Adjust to your project's required Flutter version
+
+      - name: 📂 Change Working Directory & Validate Version
+        id: validate_package
+        run: |
+          FULL_PATH="${{ steps.parse_tag.outputs.package_full_path }}"
+          TAG_VERSION="${{ steps.parse_tag.outputs.package_version }}"
+
+          # Verify pubspec.yaml exists at the extracted path
+          if [ ! -f "$FULL_PATH/pubspec.yaml" ]; then
+            echo "Error: pubspec.yaml not found at '$FULL_PATH'."
+            echo "Please ensure the tag pattern matches your monorepo's directory structure."
+            echo "For example, if your package is at 'my_repo/libs/ui_lib/pubspec.yaml',"
+            echo "your tag should be 'libs/ui_lib/v1.0.0' and the GitHub Actions tag pattern should be 'libs/*/v*.*.*'."
+            exit 1
+          fi
+
+          # Read the version from the package's pubspec.yaml
+          PUBSPEC_VERSION=$(grep 'version:' "$FULL_PATH/pubspec.yaml" | awk '{print $2}' | tr -d '\r')
+
+          # Compare the pubspec version with the version from the Git tag
+          if [ "$PUBSPEC_VERSION" != "$TAG_VERSION" ]; then
+            echo "Error: Version mismatch! Tag version ($TAG_VERSION) does not match pubspec version ($PUBSPEC_VERSION) for package '$FULL_PATH'."
+            echo "Please update '$FULL_PATH/pubspec.yaml' to version '$TAG_VERSION' before pushing the tag."
+            exit 1
+          fi
+
+          echo "Package path valid: $FULL_PATH"
+          echo "working_directory=$FULL_PATH" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: 📦 Get Dependencies
+        # Run pub get within the specific package's directory
+        run: flutter pub get # Or 'dart pub get' if pure Dart
+        working-directory: ${{ steps.validate_package.outputs.working_directory }}
+
+      - name: ✅ Run Analysis and Tests (Recommended)
+        # Ensure code quality and functionality before publishing
+        run: |
+          flutter analyze
+          flutter test
+        working-directory: ${{ steps.validate_package.outputs.working_directory }}
+
+      # IMPORTANT: This action handles the secure pub.dev authentication using OIDC.
+      # It creates a temporary token and makes it available to the `dart pub` tool.
+      - name: 🔐 Configure Pub.dev Credentials
+        uses: dart-lang/setup-pub@v1
+
+      - name: 🚀 Publish to pub.dev
+        # The `dart-lang/setup-pub` action has already set up the authentication.
+        # `--force` is used to bypass the interactive confirmation prompt in CI.
+        run: flutter pub publish --force
+        working-directory: ${{ steps.validate_package.outputs.working_directory }} # Crucial for specific package
+
+      - name: 🎉 Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Default token provided by GitHub Actions
+        with:
+          tag_name: ${{ github.ref_name }} # Use the full Git tag name (e.g., 'packages/ui_kit/v1.0.0')
+          release_name: Release ${{ github.ref_name }} # Name for the GitHub Release
+          body: |
+            # New Release for ${{ steps.parse_tag.outputs.package_full_path }}
+            Version: ${{ steps.parse_tag.outputs.package_version }}
+            See CHANGELOG.md for details.
+          draft: false
+          prerelease: false
