@@ -1,3 +1,7 @@
+## 0.0.3
+
+- Fix Github Actions (build release), fix logo image.
+
 ## 0.0.2
 
 - Add Github Actions to publish pub.dev
