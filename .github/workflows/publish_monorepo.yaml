@@ -61,12 +61,17 @@ jobs:
           echo "package_version=$PACKAGE_VERSION" >> $GITHUB_OUTPUT
         shell: bash
 
+      # - name: ⚙️ Setup Flutter SDK
+      #   # Use this for Flutter packages. For pure Dart packages, use dart-lang/setup-dart@v1
+      #   uses: subosito/flutter-action@v2
+      #   with:
+      #     channel: 'stable'
+      #     flutter-version: '3.19.0' # Adjust to your project's required Flutter version
+      
+      # The dart binary from a Flutter SDK facilitates publishing both Flutter
+      # and pure-dart packages.
       - name: ⚙️ Setup Flutter SDK
-        # Use this for Flutter packages. For pure Dart packages, use dart-lang/setup-dart@v1
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-          flutter-version: '3.19.0' # Adjust to your project's required Flutter version
+        uses: flutter-actions/setup-flutter@54feb1e258158303e041b9eaf89314dcfbf6d38a
 
       - name: 📂 Change Working Directory & Validate Version
         id: validate_package
