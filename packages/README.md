@@ -15,3 +15,9 @@
 4. Monitor GitHub Actions:
 Go to your GitHub repository's "Actions" tab. You should see your "Publish Monorepo Package to pub.dev" workflow running. Monitor its progress. If there are any errors (e.g., version mismatch, pubspec.yaml not found), the workflow will fail, and you'll get detailed logs.
 5. Merge `branch` to `master`.
+
+### Use if need
+- create new branch `git checkout -b new_branch`
+- publish new branch `git publish origin new_branch`
+- delete local tag `git tag -d tag_name`
+- delete remote tag `git push --delete origin tag_name`
