@@ -6,7 +6,7 @@ Photo by <a href="https://unsplash.com/@kitkat93?utm_content=creditCopyText&utm_
 
 Pushable button, ot tap goes down, on release goes up.
 With styling, theming, and theme extension.  
-![Push buttons example](https://raw.githubusercontent.com/neatcodingZP/flutter.basic_libs/master/packages/neat_ui/doc/push_buttons.gif "Push buttons")  
+![Push buttons example](https://raw.githubusercontent.com/neatcodingZP/flutter.basic_libs/master/packages/neat_push_button/doc/push_buttons.gif "Push buttons")  
 
 ## Table of Contents
 - [🚀 Getting started](#🚀-getting-started)
