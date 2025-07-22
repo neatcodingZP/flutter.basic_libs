@@ -1,5 +1,5 @@
 name: example
-description: A Flutter app with example of neat_ui package.
+description: A Flutter app with package examples.
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -33,6 +33,8 @@ dependencies:
 
   neat_ui:
     path: ../packages/neat_ui
+  neat_push_button:
+    path: ../packages/neat_push_button
 
 dev_dependencies:
   flutter_test:
